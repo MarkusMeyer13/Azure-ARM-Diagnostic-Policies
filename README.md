@@ -14,3 +14,6 @@ az deployment sub create --location westeurope --template-file .\Policy.json --p
 ```powershell
 New-AzDeployment -Name "diagPolicies" -location "West Europe" -TemplateFile .\Policy.json  -verbose -TemplateParameterFile .\Policy.parameters.json
 ```
+
+
+[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://github.com/MarkusMeyer13/Azure-ARM-Diagnostic-Policies/blob/master/Policy.json)  [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](https://github.com/MarkusMeyer13/Azure-ARM-Diagnostic-Policies/blob/master/Policy.json)
