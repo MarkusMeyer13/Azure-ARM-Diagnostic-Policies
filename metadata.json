@@ -1,0 +1,9 @@
+{
+    "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+    "type": "QuickStart",
+    "itemDisplayName": "Azure Policies for Diagnostic Settings",
+    "description": "Azure Policies with Diagnostic Settings configurations for specific ressoures. Includes Policy-Definitions and Policy-Set.",
+    "summary": "Azure Policies with Diagnostic Settings configurations for specific ressoures. Includes Policy-Definitions and Policy-Set.",
+    "githubUsername": "markusmeyer13",
+    "dateUpdated": "2020-09-03"
+  }

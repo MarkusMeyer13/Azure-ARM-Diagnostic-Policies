@@ -1,0 +1,916 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "variables": {
+        "kvLogPolicyName": "policy-kv-diagnostic-settings-markusm",
+        "evgTopicLogPolicyName": "policy-evg-diagnostic-settings-markusm",
+        "funcLogPolicyName": "policy-func-diagnostic-settings-markusm",
+        "sbLogPolicyName": "policy-sb-diagnostic-settings-markusm",
+        "cosmosLogPolicyName": "policy-cosmos-diagnostic-settings-markusm",
+        "diagnosticSettingsInitiativeName": "resource-diagnostic-settings-policySet-markusm",
+        "policyParameters": {
+            "effect": {
+                "defaultValue": "[parameters('effect')]",
+                "type": "String",
+                "metadata": {
+                    "displayName": "Effect",
+                    "description": "Enable or disable the execution of the policy"
+                },
+                "allowedValues": [
+                    "DeployIfNotExists",
+                    "Disabled"
+                ]
+            },
+            "profileName": {
+                "defaultValue": "[parameters('profileName')]",
+                "type": "String",
+                "metadata": {
+                    "displayName": "Profile name",
+                    "description": "The diagnostic settings profile name"
+                }
+            },
+            "logAnalytics": {
+                "defaultValue": "[parameters('logAnalytics')]",
+                "type": "String",
+                "metadata": {
+                    "displayName": "Log Analytics workspace",
+                    "description": "Select Log Analytics workspace from dropdown list. If this workspace is outside of the scope of the assignment you must manually grant 'Log Analytics Contributor' permissions (or similar) to the policy assignment's principal ID.",
+                    "strongType": "omsWorkspace",
+                    "assignPermissions": true
+                }
+            },
+            "archiveStorage": {
+                "defaultValue": "[parameters('archiveStorage')]",
+                "type": "String",
+                "metadata": {
+                    "displayName": "Archive Storage Account",
+                    "description": "Select Archive Storage Account from dropdown list. If this workspace is outside of the scope of the assignment you must manually grant 'Log Analytics Contributor' permissions (or similar) to the policy assignment's principal ID.",
+                    "strongType": "Microsoft.Storage/storageAccounts",
+                    "assignPermissions": true
+                }
+            },
+            "metricsEnabled": {
+                "defaultValue": "[parameters('metricsEnabled')]",
+                "type": "String",
+                "metadata": {
+                    "displayName": "Enable metrics",
+                    "description": "Whether to enable metrics stream to the Log Analytics workspace - True or False"
+                },
+                "allowedValues": [
+                    "True",
+                    "False"
+                ]
+            },
+            "logsEnabled": {
+                "defaultValue": "[parameters('logsEnabled')]",
+                "type": "String",
+                "metadata": {
+                    "displayName": "Enable logs",
+                    "description": "Whether to enable logs stream to the Log Analytics workspace - True or False"
+                },
+                "allowedValues": [
+                    "True",
+                    "False"
+                ]
+            }
+        }
+    },
+    "resources": [
+        {
+            "name": "[variables('kvLogPolicyName')]",
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2019-09-01",
+            "properties": {
+                "displayName": "MarkusMeyer - Deploy Diagnostic Settings for Key Vault to Log Analytics workspace",
+                "policyType": "Custom",
+                "mode": "All",
+                "description": "Deploys the diagnostic settings for Key Vault to stream to a regional Log Analytics workspace when any Key Vault which is missing this diagnostic settings is created or updated.",
+                "metadata": {
+                    "version": "1.0.0",
+                    "category": "Monitoring"
+                },
+                "parameters": "[variables('policyParameters')]",
+                "policyRule": {
+                    "if": {
+                        "field": "type",
+                        "equals": "Microsoft.KeyVault/vaults"
+                    },
+                    "then": {
+                        "effect": "[[parameters('effect')]",
+                        "details": {
+                            "type": "Microsoft.Insights/diagnosticSettings",
+                            "name": "[[parameters('profileName')]",
+                            "existenceCondition": {
+                                "allOf": [
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+                                        "equals": "[[parameters('logsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/metrics.enabled",
+                                        "equals": "[[parameters('metricsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
+                                        "exists": true
+                                    }
+                                ]
+                            },
+                            "roleDefinitionIds": [
+                                "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+                                "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+                            ],
+                            "deployment": {
+                                "properties": {
+                                    "mode": "incremental",
+                                    "template": {
+                                        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                        "contentVersion": "1.0.0.0",
+                                        "parameters": {
+                                            "resourceName": {
+                                                "type": "string"
+                                            },
+                                            "location": {
+                                                "type": "string"
+                                            },
+                                            "logAnalytics": {
+                                                "type": "string"
+                                            },
+                                            "archiveStorage": {
+                                                "type": "string"
+                                            },
+                                            "metricsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "profileName": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "variables": {},
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.KeyVault/vaults/providers/diagnosticSettings",
+                                                "apiVersion": "2017-05-01-preview",
+                                                "name": "[[concat(parameters('resourceName'), '/', 'Microsoft.Insights/', parameters('profileName'))]",
+                                                "location": "[[parameters('location')]",
+                                                "dependsOn": [],
+                                                "properties": {
+                                                    "workspaceId": "[[parameters('logAnalytics')]",
+                                                    "storageAccountId": "[[parameters('archiveStorage')]",
+                                                    "metrics": [
+                                                        {
+                                                            "category": "AllMetrics",
+                                                            "enabled": "[[parameters('metricsEnabled')]",
+                                                            "retentionPolicy": {
+                                                                "enabled": false,
+                                                                "days": 0
+                                                            }
+                                                        }
+                                                    ],
+                                                    "logs": [
+                                                        {
+                                                            "category": "AuditEvent",
+                                                            "enabled": "[[parameters('logsEnabled')]"
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "outputs": {}
+                                    },
+                                    "parameters": {
+                                        "location": {
+                                            "value": "[[field('location')]"
+                                        },
+                                        "resourceName": {
+                                            "value": "[[field('name')]"
+                                        },
+                                        "logAnalytics": {
+                                            "value": "[[parameters('logAnalytics')]"
+                                        },
+                                        "archiveStorage": {
+                                            "value": "[[parameters('archiveStorage')]"
+                                        },
+                                        "metricsEnabled": {
+                                            "value": "[[parameters('metricsEnabled')]"
+                                        },
+                                        "logsEnabled": {
+                                            "value": "[[parameters('logsEnabled')]"
+                                        },
+                                        "profileName": {
+                                            "value": "[[parameters('profileName')]"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        },
+        {
+            "name": "[variables('evgTopicLogPolicyName')]",
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2019-09-01",
+            "properties": {
+                "displayName": "MarkusMeyer - Deploy Diagnostic Settings for Event Grid Topic to Log Analytics workspace",
+                "policyType": "Custom",
+                "mode": "All",
+                "description": "Deploys the diagnostic settings for Event Grid Topic to stream to a regional Log Analytics workspace when any Event Grid Topic which is missing this diagnostic settings is created or updated.",
+                "metadata": {
+                    "version": "1.0.0",
+                    "category": "Monitoring"
+                },
+                "parameters": "[variables('policyParameters')]",
+                "policyRule": {
+                    "if": {
+                        "field": "type",
+                        "equals": "Microsoft.EventGrid/topics"
+                    },
+                    "then": {
+                        "effect": "[[parameters('effect')]",
+                        "details": {
+                            "type": "Microsoft.Insights/diagnosticSettings",
+                            "name": "[[parameters('profileName')]",
+                            "existenceCondition": {
+                                "allOf": [
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+                                        "equals": "[[parameters('logsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/metrics.enabled",
+                                        "equals": "[[parameters('metricsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
+                                        "exists": true
+                                    }
+                                ]
+                            },
+                            "roleDefinitionIds": [
+                                "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+                                "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+                            ],
+                            "deployment": {
+                                "properties": {
+                                    "mode": "incremental",
+                                    "template": {
+                                        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                        "contentVersion": "1.0.0.0",
+                                        "parameters": {
+                                            "resourceName": {
+                                                "type": "string"
+                                            },
+                                            "location": {
+                                                "type": "string"
+                                            },
+                                            "logAnalytics": {
+                                                "type": "string"
+                                            },
+                                            "archiveStorage": {
+                                                "type": "string"
+                                            },
+                                            "metricsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "profileName": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "variables": {},
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.EventGrid/topics/providers/diagnosticSettings",
+                                                "apiVersion": "2017-05-01-preview",
+                                                "name": "[[concat(parameters('resourceName'), '/', 'Microsoft.Insights/', parameters('profileName'))]",
+                                                "location": "[[parameters('location')]",
+                                                "dependsOn": [],
+                                                "properties": {
+                                                    "workspaceId": "[[parameters('logAnalytics')]",
+                                                    "storageAccountId": "[[parameters('archiveStorage')]",
+                                                    "metrics": [
+                                                        {
+                                                            "category": "AllMetrics",
+                                                            "enabled": "[[parameters('metricsEnabled')]",
+                                                            "retentionPolicy": {
+                                                                "enabled": false,
+                                                                "days": 0
+                                                            }
+                                                        }
+                                                    ],
+                                                    "logs": [
+                                                        {
+                                                            "category": "PublishFailures",
+                                                            "enabled": "[[parameters('logsEnabled')]"
+                                                        },
+                                                        {
+                                                            "category": "DeliveryFailures",
+                                                            "enabled": "[[parameters('logsEnabled')]"
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "outputs": {}
+                                    },
+                                    "parameters": {
+                                        "location": {
+                                            "value": "[[field('location')]"
+                                        },
+                                        "resourceName": {
+                                            "value": "[[field('name')]"
+                                        },
+                                        "logAnalytics": {
+                                            "value": "[[parameters('logAnalytics')]"
+                                        },
+                                        "archiveStorage": {
+                                            "value": "[[parameters('archiveStorage')]"
+                                        },
+                                        "metricsEnabled": {
+                                            "value": "[[parameters('metricsEnabled')]"
+                                        },
+                                        "logsEnabled": {
+                                            "value": "[[parameters('logsEnabled')]"
+                                        },
+                                        "profileName": {
+                                            "value": "[[parameters('profileName')]"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        },
+        {
+            "name": "[variables('funcLogPolicyName')]",
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2019-09-01",
+            "properties": {
+                "displayName": "MarkusMeyer - Deploy Diagnostic Settings for Function to Log Analytics workspace",
+                "policyType": "Custom",
+                "mode": "All",
+                "description": "Deploys the diagnostic settings for Function to stream to a regional Log Analytics workspace when any Function which is missing this diagnostic settings is created or updated.",
+                "metadata": {
+                    "version": "1.0.0",
+                    "category": "Monitoring"
+                },
+                "parameters": "[variables('policyParameters')]",
+                "policyRule": {
+                    "if": {
+                        "field": "type",
+                        "equals": "Microsoft.Web/sites"
+                    },
+                    "then": {
+                        "effect": "[[parameters('effect')]",
+                        "details": {
+                            "type": "Microsoft.Insights/diagnosticSettings",
+                            "name": "[[parameters('profileName')]",
+                            "existenceCondition": {
+                                "allOf": [
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+                                        "equals": "[[parameters('logsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/metrics.enabled",
+                                        "equals": "[[parameters('metricsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
+                                        "exists": true
+                                    }
+                                ]
+                            },
+                            "roleDefinitionIds": [
+                                "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+                                "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+                            ],
+                            "deployment": {
+                                "properties": {
+                                    "mode": "incremental",
+                                    "template": {
+                                        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                        "contentVersion": "1.0.0.0",
+                                        "parameters": {
+                                            "resourceName": {
+                                                "type": "string"
+                                            },
+                                            "location": {
+                                                "type": "string"
+                                            },
+                                            "logAnalytics": {
+                                                "type": "string"
+                                            },
+                                            "archiveStorage": {
+                                                "type": "string"
+                                            },
+                                            "metricsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "profileName": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "variables": {},
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.Web/sites/providers/diagnosticSettings",
+                                                "apiVersion": "2017-05-01-preview",
+                                                "name": "[[concat(parameters('resourceName'), '/', 'Microsoft.Insights/', parameters('profileName'))]",
+                                                "location": "[[parameters('location')]",
+                                                "dependsOn": [],
+                                                "properties": {
+                                                    "workspaceId": "[[parameters('logAnalytics')]",
+                                                    "storageAccountId": "[[parameters('archiveStorage')]",
+                                                    "metrics": [
+                                                        {
+                                                            "category": "AllMetrics",
+                                                            "enabled": "[[parameters('metricsEnabled')]",
+                                                            "retentionPolicy": {
+                                                                "enabled": false,
+                                                                "days": 0
+                                                            }
+                                                        }
+                                                    ],
+                                                    "logs": [
+                                                        {
+                                                            "category": "FunctionAppLogs",
+                                                            "enabled": "[[parameters('logsEnabled')]"
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "outputs": {}
+                                    },
+                                    "parameters": {
+                                        "location": {
+                                            "value": "[[field('location')]"
+                                        },
+                                        "resourceName": {
+                                            "value": "[[field('name')]"
+                                        },
+                                        "logAnalytics": {
+                                            "value": "[[parameters('logAnalytics')]"
+                                        },
+                                        "archiveStorage": {
+                                            "value": "[[parameters('archiveStorage')]"
+                                        },
+                                        "metricsEnabled": {
+                                            "value": "[[parameters('metricsEnabled')]"
+                                        },
+                                        "logsEnabled": {
+                                            "value": "[[parameters('logsEnabled')]"
+                                        },
+                                        "profileName": {
+                                            "value": "[[parameters('profileName')]"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        },
+        {
+            "name": "[variables('sbLogPolicyName')]",
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2019-09-01",
+            "properties": {
+                "displayName": "MarkusMeyer - Deploy Diagnostic Settings for Service Bus to Log Analytics workspace",
+                "policyType": "Custom",
+                "mode": "All",
+                "description": "Deploys the diagnostic settings for Service Bus to stream to a regional Log Analytics workspace when any Service Bus which is missing this diagnostic settings is created or updated.",
+                "metadata": {
+                    "version": "1.0.0",
+                    "category": "Monitoring"
+                },
+                "parameters": "[variables('policyParameters')]",
+                "policyRule": {
+                    "if": {
+                        "field": "type",
+                        "equals": "Microsoft.ServiceBus/namespaces"
+                    },
+                    "then": {
+                        "effect": "[[parameters('effect')]",
+                        "details": {
+                            "type": "Microsoft.Insights/diagnosticSettings",
+                            "name": "[[parameters('profileName')]",
+                            "existenceCondition": {
+                                "allOf": [
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+                                        "equals": "[[parameters('logsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/metrics.enabled",
+                                        "equals": "[[parameters('metricsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
+                                        "exists": true
+                                    }
+                                ]
+                            },
+                            "roleDefinitionIds": [
+                                "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+                                "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+                            ],
+                            "deployment": {
+                                "properties": {
+                                    "mode": "incremental",
+                                    "template": {
+                                        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                        "contentVersion": "1.0.0.0",
+                                        "parameters": {
+                                            "resourceName": {
+                                                "type": "string"
+                                            },
+                                            "location": {
+                                                "type": "string"
+                                            },
+                                            "logAnalytics": {
+                                                "type": "string"
+                                            },
+                                            "archiveStorage": {
+                                                "type": "string"
+                                            },
+                                            "metricsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "profileName": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "variables": {},
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.ServiceBus/namespaces/providers/diagnosticSettings",
+                                                "apiVersion": "2017-05-01-preview",
+                                                "name": "[[concat(parameters('resourceName'), '/', 'Microsoft.Insights/', parameters('profileName'))]",
+                                                "location": "[[parameters('location')]",
+                                                "dependsOn": [],
+                                                "properties": {
+                                                    "workspaceId": "[[parameters('logAnalytics')]",
+                                                    "storageAccountId": "[[parameters('archiveStorage')]",
+                                                    "metrics": [
+                                                        {
+                                                            "category": "AllMetrics",
+                                                            "enabled": "[[parameters('metricsEnabled')]",
+                                                            "retentionPolicy": {
+                                                                "enabled": false,
+                                                                "days": 0
+                                                            }
+                                                        }
+                                                    ],
+                                                    "logs": [
+                                                        {
+                                                            "category": "OperationalLogs",
+                                                            "enabled": true
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "outputs": {}
+                                    },
+                                    "parameters": {
+                                        "location": {
+                                            "value": "[[field('location')]"
+                                        },
+                                        "resourceName": {
+                                            "value": "[[field('name')]"
+                                        },
+                                        "logAnalytics": {
+                                            "value": "[[parameters('logAnalytics')]"
+                                        },
+                                        "archiveStorage": {
+                                            "value": "[[parameters('archiveStorage')]"
+                                        },
+                                        "metricsEnabled": {
+                                            "value": "[[parameters('metricsEnabled')]"
+                                        },
+                                        "logsEnabled": {
+                                            "value": "[[parameters('logsEnabled')]"
+                                        },
+                                        "profileName": {
+                                            "value": "[[parameters('profileName')]"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        },
+        {
+            "name": "[variables('cosmosLogPolicyName')]",
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2019-09-01",
+            "properties": {
+                "displayName": "MarkusMeyer - Deploy Diagnostic Settings for Cosmos DB to Log Analytics workspace",
+                "policyType": "Custom",
+                "mode": "All",
+                "description": "Deploys the diagnostic settings for Cosmos DB to stream to a regional Log Analytics workspace when any Cosmos DB which is missing this diagnostic settings is created or updated.",
+                "metadata": {
+                    "version": "1.0.0",
+                    "category": "Monitoring"
+                },
+                "parameters": "[variables('policyParameters')]",
+                "policyRule": {
+                    "if": {
+                        "field": "type",
+                        "equals": "Microsoft.DocumentDB/databaseAccounts"
+                    },
+                    "then": {
+                        "effect": "[[parameters('effect')]",
+                        "details": {
+                            "type": "Microsoft.Insights/diagnosticSettings",
+                            "name": "[[parameters('profileName')]",
+                            "existenceCondition": {
+                                "allOf": [
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+                                        "equals": "[[parameters('logsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/metrics.enabled",
+                                        "equals": "[[parameters('metricsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
+                                        "exists": true
+                                    }
+                                ]
+                            },
+                            "roleDefinitionIds": [
+                                "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+                                "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+                            ],
+                            "deployment": {
+                                "properties": {
+                                    "mode": "incremental",
+                                    "template": {
+                                        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                        "contentVersion": "1.0.0.0",
+                                        "parameters": {
+                                            "resourceName": {
+                                                "type": "string"
+                                            },
+                                            "location": {
+                                                "type": "string"
+                                            },
+                                            "logAnalytics": {
+                                                "type": "string"
+                                            },
+                                            "archiveStorage": {
+                                                "type": "string"
+                                            },
+                                            "metricsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "profileName": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "variables": {},
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.DocumentDB/databaseAccounts/providers/diagnosticSettings",
+                                                "apiVersion": "2017-05-01-preview",
+                                                "name": "[[concat(parameters('resourceName'), '/', 'Microsoft.Insights/', parameters('profileName'))]",
+                                                "location": "[[parameters('location')]",
+                                                "dependsOn": [],
+                                                "properties": {
+                                                    "workspaceId": "[[parameters('logAnalytics')]",
+                                                    "storageAccountId": "[[parameters('archiveStorage')]",
+                                                    "metrics": [
+                                                        {
+                                                            "category": "Requests",
+                                                            "enabled": true,
+                                                            "retentionPolicy": {
+                                                                "days": 0,
+                                                                "enabled": false
+                                                            },
+                                                            "timeGrain": null
+                                                        }
+                                                    ],
+                                                    "logs": [
+                                                        {
+                                                            "category": "DataPlaneRequests",
+                                                            "enabled": true
+                                                        },
+                                                        {
+                                                            "category": "QueryRuntimeStatistics",
+                                                            "enabled": true
+                                                        },
+                                                        {
+                                                            "category": "PartitionKeyStatistics",
+                                                            "enabled": true
+                                                        },
+                                                        {
+                                                            "category": "PartitionKeyRUConsumption",
+                                                            "enabled": true
+                                                        },
+                                                        {
+                                                            "category": "ControlPlaneRequests",
+                                                            "enabled": true
+                                                        },
+                                                        {
+                                                            "category": "GremlinRequests",
+                                                            "enabled": true
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "outputs": {}
+                                    },
+                                    "parameters": {
+                                        "location": {
+                                            "value": "[[field('location')]"
+                                        },
+                                        "resourceName": {
+                                            "value": "[[field('name')]"
+                                        },
+                                        "logAnalytics": {
+                                            "value": "[[parameters('logAnalytics')]"
+                                        },
+                                        "archiveStorage": {
+                                            "value": "[[parameters('archiveStorage')]"
+                                        },
+                                        "metricsEnabled": {
+                                            "value": "[[parameters('metricsEnabled')]"
+                                        },
+                                        "logsEnabled": {
+                                            "value": "[[parameters('logsEnabled')]"
+                                        },
+                                        "profileName": {
+                                            "value": "[[parameters('profileName')]"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        },
+        {
+            "type": "Microsoft.Authorization/policySetDefinitions",
+            "name": "[variables('diagnosticSettingsInitiativeName')]",
+            "apiVersion": "2019-09-01",
+            "dependsOn": [
+            ],
+            "properties": {
+                "displayName": "MarkusMeyer - Apply diagnostic settings for applicable resources - Log Analytics",
+                "description": "This initiative configures application Azure resources to forward diagnostic logs and metrics to an Azure Log Analytics workspace.",
+                "metadata": {
+                    "category": "Monitoring"
+                },
+                "parameters": {
+                    "logAnalytics": {
+                        "type": "string",
+                        "metadata": {
+                            "displayName": "Log Analytics workspace",
+                            "description": "Select the Log Analytics workspace from dropdown list",
+                            "strongType": "omsWorkspace"
+                        }
+                    }
+                },
+                "policyDefinitions": [
+                    {
+                        "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions/', variables('kvLogPolicyName'))]",
+                        "parameters": {
+                            "logAnalytics": {
+                                "value": "[[parameters('logAnalytics')]"
+                            }
+                        }
+                    },
+                    {
+                        "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions/', variables('sbLogPolicyName'))]",
+                        "parameters": {
+                            "logAnalytics": {
+                                "value": "[[parameters('logAnalytics')]"
+                            }
+                        }
+                    },
+                    {
+                        "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions/', variables('cosmosLogPolicyName'))]",
+                        "parameters": {
+                            "logAnalytics": {
+                                "value": "[[parameters('logAnalytics')]"
+                            }
+                        }
+                    },
+                    {
+                        "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions/', variables('funcLogPolicyName'))]",
+                        "parameters": {
+                            "logAnalytics": {
+                                "value": "[[parameters('logAnalytics')]"
+                            }
+                        }
+                    },
+                    {
+                        "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions/', variables('evgTopicLogPolicyName'))]",
+                        "parameters": {
+                            "logAnalytics": {
+                                "value": "[[parameters('logAnalytics')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+
+    ],
+    "parameters": {
+        "effect": {
+            "type": "string",
+            "defaultValue": "DeployIfNotExists",
+            "allowedValues": [
+                "DeployIfNotExists",
+                "Disabled"
+            ],
+            "metadata": {
+                "displayName": "Effect",
+                "description": "Enable or disable the execution of the policy"
+            }
+        },
+        "profileName": {
+            "type": "string",
+            "defaultValue": "setbypolicy_logAnalytics",
+            "metadata": {
+                "displayName": "Profile name",
+                "description": "The diagnostic settings profile name"
+            }
+        },
+        "logAnalytics": {
+            "type": "string",
+            "metadata": {
+                "displayName": "Log Analytics workspace",
+                "description": "Select Log Analytics workspace from dropdown list. If this workspace is outside of the scope of the assignment you must manually grant 'Log Analytics Contributor' permissions (or similar) to the policy assignment's principal ID.",
+                "strongType": "omsWorkspace",
+                "assignPermissions": true
+            }
+        },
+        "archiveStorage": {
+            "type": "string",
+            "metadata": {
+                "displayName": "Archive Storage Account",
+                "description": "Select Archive Storage Account from dropdown list. If this workspace is outside of the scope of the assignment you must manually grant 'Log Analytics Contributor' permissions (or similar) to the policy assignment's principal ID.",
+                "strongType": "Microsoft.Storage/storageAccounts",
+                "assignPermissions": true
+            }
+        },
+        "metricsEnabled": {
+            "type": "string",
+            "defaultValue": "False",
+            "allowedValues": [
+                "True",
+                "False"
+            ],
+            "metadata": {
+                "displayName": "Enable metrics",
+                "description": "Whether to enable metrics stream to the Log Analytics workspace - True or False"
+            }
+        },
+        "logsEnabled": {
+            "type": "string",
+            "defaultValue": "True",
+            "allowedValues": [
+                "True",
+                "False"
+            ],
+            "metadata": {
+                "displayName": "Enable logs",
+                "description": "Whether to enable logs stream to the Log Analytics workspace - True or False"
+            }
+        }
+    }
+}
