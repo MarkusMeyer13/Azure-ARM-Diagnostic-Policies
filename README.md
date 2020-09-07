@@ -1,23 +1,28 @@
 # Azure-ARM-Diagnostic-Policies
+
 ARM documents to deploy diagnostic policies for specific resources
 
 ## Policies
 
 ### Initiative
+
 ![image](https://user-images.githubusercontent.com/8818198/92326806-257c2200-f055-11ea-8482-ae7638d343f6.png)
 
 ### Initiative - Policies
+
 ![image](https://user-images.githubusercontent.com/8818198/92326814-32007a80-f055-11ea-8412-64fc345f06f9.png)
 
 ### Policy Cosmos DB
+
 ![image](https://user-images.githubusercontent.com/8818198/92326826-3fb60000-f055-11ea-9491-1cc74aa673a1.png)
 
 ### Assign Policy Cosmos DB
 
 ![image](https://user-images.githubusercontent.com/8818198/92326840-58261a80-f055-11ea-9cf1-b8a6b8458953.png)
-### Assign Policy Cosmos DB - Parameters
-![image](https://user-images.githubusercontent.com/8818198/92326844-5fe5bf00-f055-11ea-8108-ea38d6240318.png)
 
+### Assign Policy Cosmos DB - Parameters
+
+![image](https://user-images.githubusercontent.com/8818198/92326844-5fe5bf00-f055-11ea-8108-ea38d6240318.png)
 
 ## Diagnostic Setting - Cosmos DB
 
@@ -25,14 +30,12 @@ ARM documents to deploy diagnostic policies for specific resources
 
 ![image](https://user-images.githubusercontent.com/8818198/92326764-dcc46900-f054-11ea-9373-2f13bfb14b70.png)
 
-
-
 ## Deployment
 
 ### Azure CLI
 
 ```azurecli-interactive
-az deployment sub create --location westeurope --template-file .\Policy.json --parameters '{ \"profileName\": { \"value\": \"MarkusMeyer-setbypolicy_logAnalytics\" }, \"logAnalytics\": { \"value\": \"DefaultWorkspace-e687f850-b05f-4061-8ccc-e950cca41423-WEU\" }, \"metricsEnabled\": { \"value\": \"True\" }, \"logsEnabled\": { \"value\": \"True\" }, \"effect\": { \"value\": \"DeployIfNotExists\" } }'
+az deployment sub create --location westeurope --template-file .\Policy.json --parameters '{ \"profileName\": { \"value\": \"MarkusMeyer-setbypolicy_logAnalytics\" }, \"logAnalytics\": { \"value\": \"DefaultWorkspace-e687f850-b05f-4061-8ccc-e950cca41423-WEU\" }, \"metricsEnabled\": { \"value\": \"True\" }, \"logsEnabled\": { \"value\": \"True\" }, \"effect\": { \"value\": \"DeployIfNotExists\" }, \"archiveStorage\": { \"value\": \"stevalmm\"}  }'
 ```
 
 ### Powershell
