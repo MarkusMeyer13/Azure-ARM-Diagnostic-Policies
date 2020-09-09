@@ -3,12 +3,13 @@
     "contentVersion": "1.0.0.0",
     "variables": {
         "kvLogPolicyName": "policy-kv-diagnostic-settings-markusm",
-        "evgTopicLogPolicyName": "policy-evg-diagnostic-settings-markusm",
+        "evgTopicLogPolicyName": "policy-evg-topic-diagnostic-settings-markusm",
+        "evgSubscriptionLogPolicyName": "policy-evg-subscription-diagnostic-settings-markusm",
         "funcLogPolicyName": "policy-func-diagnostic-settings-markusm",
         "sbLogPolicyName": "policy-sb-diagnostic-settings-markusm",
         "cosmosLogPolicyName": "policy-cosmos-diagnostic-settings-markusm",
         "agwLogPolicyName": "policy-agw-diagnostic-settings-markusm",
-        "nsgLogPolicyName":"policy-nsg-diagnostic-settings-markusm",
+        "nsgLogPolicyName": "policy-nsg-diagnostic-settings-markusm",
         "diagnosticSettingsInitiativeName": "resource-diagnostic-settings-policySet-markusm",
         "policyParameters": {
             "effect": {
@@ -74,6 +75,18 @@
                     "True",
                     "False"
                 ]
+            },
+            "storageExists": {
+                "defaultValue": "[parameters('storageExists')]",
+                "type": "String",
+                "metadata": {
+                    "displayName": "Enable logging to Storage Account",
+                    "description": "Whether to enable logging to Storage Account - True or False"
+                },
+                "allowedValues": [
+                    "True",
+                    "False"
+                ]
             }
         }
     },
@@ -114,7 +127,7 @@
                                     },
                                     {
                                         "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
-                                        "exists": true
+                                        "equals": "[[parameters('storageExists')]"
                                     }
                                 ]
                             },
@@ -145,6 +158,9 @@
                                                 "type": "string"
                                             },
                                             "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "storageExists": {
                                                 "type": "string"
                                             },
                                             "profileName": {
@@ -202,6 +218,9 @@
                                         "logsEnabled": {
                                             "value": "[[parameters('logsEnabled')]"
                                         },
+                                        "storageExists": {
+                                            "value": "[[parameters('storageExists')]"
+                                        },
                                         "profileName": {
                                             "value": "[[parameters('profileName')]"
                                         }
@@ -250,7 +269,7 @@
                                     },
                                     {
                                         "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
-                                        "exists": true
+                                        "equals": "[[parameters('storageExists')]"
                                     }
                                 ]
                             },
@@ -281,6 +300,9 @@
                                                 "type": "string"
                                             },
                                             "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "storageExists": {
                                                 "type": "string"
                                             },
                                             "profileName": {
@@ -342,6 +364,150 @@
                                         "logsEnabled": {
                                             "value": "[[parameters('logsEnabled')]"
                                         },
+                                        "storageExists": {
+                                            "value": "[[parameters('storageExists')]"
+                                        },
+                                        "profileName": {
+                                            "value": "[[parameters('profileName')]"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        },
+        {
+            "name": "[variables('evgSubscriptionLogPolicyName')]",
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2019-09-01",
+            "dependsOn": [
+                "[variables('evgTopicLogPolicyName')]"
+            ],
+            "properties": {
+                "displayName": "MarkusMeyer - Deploy Diagnostic Settings for Event Grid Subscriptions to Log Analytics workspace",
+                "policyType": "Custom",
+                "mode": "All",
+                "description": "Deploys the diagnostic settings for Event Grid Subscriptions to stream to a regional Log Analytics workspace when any Event Grid Subscriptions which is missing this diagnostic settings is created or updated.",
+                "metadata": {
+                    "version": "1.0.0",
+                    "category": "Monitoring"
+                },
+                "parameters": "[variables('policyParameters')]",
+                "policyRule": {
+                    "if": {
+                        "field": "type",
+                        "equals": "Microsoft.EventGrid/eventSubscriptions"
+                    },
+                    "then": {
+                        "effect": "[[parameters('effect')]",
+                        "details": {
+                            "type": "Microsoft.Insights/diagnosticSettings",
+                            "name": "[[parameters('profileName')]",
+                            "existenceCondition": {
+                                "allOf": [
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+                                        "equals": "[[parameters('logsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/metrics.enabled",
+                                        "equals": "[[parameters('metricsEnabled')]"
+                                    },
+                                    {
+                                        "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
+                                        "equals": "[[parameters('storageExists')]"
+                                    }
+                                ]
+                            },
+                            "roleDefinitionIds": [
+                                "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+                                "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+                            ],
+                            "deployment": {
+                                "properties": {
+                                    "mode": "incremental",
+                                    "template": {
+                                        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                        "contentVersion": "1.0.0.0",
+                                        "parameters": {
+                                            "resourceName": {
+                                                "type": "string"
+                                            },
+                                            "location": {
+                                                "type": "string"
+                                            },
+                                            "logAnalytics": {
+                                                "type": "string"
+                                            },
+                                            "archiveStorage": {
+                                                "type": "string"
+                                            },
+                                            "metricsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "storageExists": {
+                                                "type": "string"
+                                            },
+                                            "profileName": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "variables": {},
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.EventGrid/eventSubscriptions/providers/diagnosticSettings",
+                                                "apiVersion": "2017-05-01-preview",
+                                                "name": "[[concat(parameters('resourceName'), '/', 'Microsoft.Insights/', parameters('profileName'))]",
+                                                "location": "[[parameters('location')]",
+                                                "dependsOn": [],
+                                                "properties": {
+                                                    "workspaceId": "[[parameters('logAnalytics')]",
+                                                    "storageAccountId": "[[parameters('archiveStorage')]",
+                                                    "metrics": [
+                                                        {
+                                                            "category": "AllMetrics",
+                                                            "enabled": "[[parameters('metricsEnabled')]",
+                                                            "retentionPolicy": {
+                                                                "enabled": false,
+                                                                "days": 0
+                                                            }
+                                                        }
+                                                    ],
+                                                    "logs": [
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "outputs": {}
+                                    },
+                                    "parameters": {
+                                        "location": {
+                                            "value": "[[field('location')]"
+                                        },
+                                        "resourceName": {
+                                            "value": "[[field('name')]"
+                                        },
+                                        "logAnalytics": {
+                                            "value": "[[parameters('logAnalytics')]"
+                                        },
+                                        "archiveStorage": {
+                                            "value": "[[parameters('archiveStorage')]"
+                                        },
+                                        "metricsEnabled": {
+                                            "value": "[[parameters('metricsEnabled')]"
+                                        },
+                                        "logsEnabled": {
+                                            "value": "[[parameters('logsEnabled')]"
+                                        },
+                                        "storageExists": {
+                                            "value": "[[parameters('storageExists')]"
+                                        },
                                         "profileName": {
                                             "value": "[[parameters('profileName')]"
                                         }
@@ -390,7 +556,7 @@
                                     },
                                     {
                                         "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
-                                        "exists": true
+                                        "equals": "[[parameters('storageExists')]"
                                     }
                                 ]
                             },
@@ -421,6 +587,9 @@
                                                 "type": "string"
                                             },
                                             "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "storageExists": {
                                                 "type": "string"
                                             },
                                             "profileName": {
@@ -478,6 +647,9 @@
                                         "logsEnabled": {
                                             "value": "[[parameters('logsEnabled')]"
                                         },
+                                        "storageExists": {
+                                            "value": "[[parameters('storageExists')]"
+                                        },
                                         "profileName": {
                                             "value": "[[parameters('profileName')]"
                                         }
@@ -526,7 +698,7 @@
                                     },
                                     {
                                         "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
-                                        "exists": true
+                                        "equals": "[[parameters('storageExists')]"
                                     }
                                 ]
                             },
@@ -557,6 +729,9 @@
                                                 "type": "string"
                                             },
                                             "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "storageExists": {
                                                 "type": "string"
                                             },
                                             "profileName": {
@@ -614,6 +789,9 @@
                                         "logsEnabled": {
                                             "value": "[[parameters('logsEnabled')]"
                                         },
+                                        "storageExists": {
+                                            "value": "[[parameters('storageExists')]"
+                                        },
                                         "profileName": {
                                             "value": "[[parameters('profileName')]"
                                         }
@@ -662,7 +840,7 @@
                                     },
                                     {
                                         "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
-                                        "exists": true
+                                        "equals": "[[parameters('storageExists')]"
                                     }
                                 ]
                             },
@@ -693,6 +871,9 @@
                                                 "type": "string"
                                             },
                                             "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "storageExists": {
                                                 "type": "string"
                                             },
                                             "profileName": {
@@ -771,6 +952,9 @@
                                         "logsEnabled": {
                                             "value": "[[parameters('logsEnabled')]"
                                         },
+                                        "storageExists": {
+                                            "value": "[[parameters('storageExists')]"
+                                        },
                                         "profileName": {
                                             "value": "[[parameters('profileName')]"
                                         }
@@ -819,7 +1003,7 @@
                                     },
                                     {
                                         "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
-                                        "exists": true
+                                        "equals": "[[parameters('storageExists')]"
                                     }
                                 ]
                             },
@@ -850,6 +1034,9 @@
                                                 "type": "string"
                                             },
                                             "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "storageExists": {
                                                 "type": "string"
                                             },
                                             "profileName": {
@@ -902,6 +1089,9 @@
                                         "logsEnabled": {
                                             "value": "[[parameters('logsEnabled')]"
                                         },
+                                        "storageExists": {
+                                            "value": "[[parameters('storageExists')]"
+                                        },
                                         "profileName": {
                                             "value": "[[parameters('profileName')]"
                                         }
@@ -950,7 +1140,7 @@
                                     },
                                     {
                                         "field": "Microsoft.Insights/diagnosticSettings/storageAccountId",
-                                        "exists": true
+                                        "equals": "[[parameters('storageExists')]"
                                     }
                                 ]
                             },
@@ -981,6 +1171,9 @@
                                                 "type": "string"
                                             },
                                             "logsEnabled": {
+                                                "type": "string"
+                                            },
+                                            "storageExists": {
                                                 "type": "string"
                                             },
                                             "profileName": {
@@ -1046,6 +1239,9 @@
                                         },
                                         "logsEnabled": {
                                             "value": "[[parameters('logsEnabled')]"
+                                        },
+                                        "storageExists": {
+                                            "value": "[[parameters('storageExists')]"
                                         },
                                         "profileName": {
                                             "value": "[[parameters('profileName')]"
@@ -1188,6 +1384,18 @@
             "metadata": {
                 "displayName": "Enable logs",
                 "description": "Whether to enable logs stream to the Log Analytics workspace - True or False"
+            }
+        },
+        "storageExists": {
+            "type": "string",
+            "defaultValue": "True",
+            "allowedValues": [
+                "True",
+                "False"
+            ],
+            "metadata": {
+                "displayName": "Enable logging to Storage Account",
+                "description": "Whether to enable logging to Storage Account - True or False"
             }
         }
     }

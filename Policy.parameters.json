@@ -40,6 +40,13 @@
                 "description": "Enable Logs - True or False"
             }
         },
+        "storageExists": {
+            "value": "True",
+            "metadata": {
+                "displayName": "Enable logging to Storage Account",
+                "description": "Enable logging to Storage Account- True or False"
+            }
+        },
         "effect": {
             "value": "DeployIfNotExists",
             "metadata": {
