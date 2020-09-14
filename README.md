@@ -35,7 +35,7 @@ ARM documents to deploy diagnostic policies for specific resources
 ### Azure CLI
 
 ```azurecli-interactive
-az deployment sub create --location westeurope --template-file .\Policy.json --parameters '{ \"profileName\": { \"value\": \"MarkusMeyer-setbypolicy_logAnalytics\" }, \"logAnalytics\": { \"value\": \"DefaultWorkspace-e687f850-b05f-4061-8ccc-e950cca41423-WEU\" }, \"metricsEnabled\": { \"value\": \"True\" }, \"logsEnabled\": { \"value\": \"True\" }, \"effect\": { \"value\": \"DeployIfNotExists\" }, \"archiveStorage\": { \"value\": \"stevalmm\"}  }'
+az deployment sub create  --location westeurope --template-file .\Policy.json --parameters "@Policy.parameters.json"
 ```
 
 ### Powershell
