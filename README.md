@@ -2,6 +2,11 @@
 
 ARM documents to deploy diagnostic policies for specific resources
 
+Please find my blog post with additional information here:
+
+[https://markusmeyer.hashnode.dev/configure-azure-diagnostic-settings-with-azure-policies](https://markusmeyer.hashnode.dev/configure-azure-diagnostic-settings-with-azure-policies "Configure Azure Diagnostic Settings with Azure Policies")
+
+
 ## Policies
 
 ### Initiative
